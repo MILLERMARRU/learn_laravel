@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: example_app_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: example_app
+      MYSQL_USER: miller
+      MYSQL_PASSWORD: miller123
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3302:3306"   # host:3302 → contenedor:3306 (coincide con DB_PORT del .env)
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
