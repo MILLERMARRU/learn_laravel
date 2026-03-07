@@ -1,0 +1,603 @@
+openapi: 3.0.3
+
+info:
+  title: API Inventario
+  description: API REST para gestión de categorías y productos
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+
+tags:
+  - name: Categorías
+    description: Gestión de categorías de productos
+  - name: Productos
+    description: Gestión de productos del inventario
+
+# ══ PATHS ═══════════════════════════════════════════════════════
+
+paths:
+
+  # ── Categorías ────────────────────────────────────────────────
+
+  /categorias:
+    get:
+      tags: [Categorías]
+      summary: Listar categorías
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por nombre
+          schema:
+            type: string
+            example: ropa
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Categoria'
+
+    post:
+      tags: [Categorías]
+      summary: Crear categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCategoriaRequest'
+      responses:
+        '201':
+          description: Categoría creada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Categoria'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /categorias/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Categorías]
+      summary: Obtener categoría por ID
+      responses:
+        '200':
+          description: Categoría obtenida correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Categoria'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Categorías]
+      summary: Actualizar categoría (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoriaRequest'
+      responses:
+        '200':
+          description: Categoría actualizada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Categoria'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Categorías]
+      summary: Actualizar categoría (parcial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoriaRequest'
+      responses:
+        '200':
+          description: Categoría actualizada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Categoria'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Categorías]
+      summary: Eliminar categoría (hard delete)
+      responses:
+        '204':
+          description: Categoría eliminada correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Productos ─────────────────────────────────────────────────
+
+  /productos:
+    get:
+      tags: [Productos]
+      summary: Listar productos
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por nombre o código de producto
+          schema:
+            type: string
+            example: arroz
+        - name: categoria_id
+          in: query
+          description: Filtrar por categoría
+          schema:
+            type: integer
+            example: 1
+        - name: activo
+          in: query
+          description: Filtrar por estado activo/inactivo
+          schema:
+            type: boolean
+            example: true
+        - name: con_eliminados
+          in: query
+          description: Incluir productos con soft delete
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Producto'
+
+    post:
+      tags: [Productos]
+      summary: Crear producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreProductoRequest'
+      responses:
+        '201':
+          description: Producto creado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Producto'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /productos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Productos]
+      summary: Obtener producto por ID
+      responses:
+        '200':
+          description: Producto obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Producto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Productos]
+      summary: Actualizar producto (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductoRequest'
+      responses:
+        '200':
+          description: Producto actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Producto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Productos]
+      summary: Actualizar producto (parcial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductoRequest'
+      responses:
+        '200':
+          description: Producto actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Producto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Productos]
+      summary: Eliminar producto (soft delete)
+      description: Establece `deleted_at`. El registro permanece en la BD para preservar historial de ventas.
+      responses:
+        '204':
+          description: Producto eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ══ COMPONENTS ══════════════════════════════════════════════════
+
+components:
+
+  # ── Parámetros reutilizables ──────────────────────────────────
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        example: 1
+
+  # ── Respuestas reutilizables ──────────────────────────────────
+
+  responses:
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            success: false
+            message: Categoría no encontrada.
+
+    ValidationError:
+      description: Error de validación
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            success: false
+            message: El nombre de la categoría es obligatorio.
+            errors:
+              nombre: [El nombre de la categoría es obligatorio.]
+
+  # ── Schemas ───────────────────────────────────────────────────
+
+  schemas:
+
+    # Respuesta estándar exitosa
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operación realizada correctamente.
+        data:
+          description: Payload de la respuesta
+
+    # Respuesta estándar de error
+    ApiErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Recurso no encontrado.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    # ── Categoría ─────────────────────────────────────────────
+
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Lácteos
+        descripcion:
+          type: string
+          nullable: true
+          example: Productos derivados de la leche
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-06 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-06 10:00:00'
+
+    StoreCategoriaRequest:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Lácteos
+        descripcion:
+          type: string
+          nullable: true
+          example: Productos derivados de la leche
+
+    UpdateCategoriaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Lácteos
+        descripcion:
+          type: string
+          nullable: true
+          example: Productos derivados de la leche
+
+    # ── Producto ──────────────────────────────────────────────
+
+    Producto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        cod_producto:
+          type: string
+          example: PROD-001
+        nombre:
+          type: string
+          example: Leche entera
+        marca:
+          type: string
+          nullable: true
+          example: Gloria
+        unidad_medida:
+          type: string
+          example: lt
+        contenido:
+          type: string
+          nullable: true
+          example: 1lt
+        precio_compra:
+          type: number
+          format: float
+          example: 2.50
+        precio_minorista:
+          type: number
+          format: float
+          example: 3.50
+        precio_mayorista:
+          type: number
+          format: float
+          example: 3.00
+        stock_minimo:
+          type: integer
+          example: 10
+        activo:
+          type: boolean
+          example: true
+        eliminado_en:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        categoria:
+          $ref: '#/components/schemas/Categoria'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-06 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-06 10:00:00'
+
+    StoreProductoRequest:
+      type: object
+      required:
+        - cod_producto
+        - nombre
+        - categoria_id
+        - unidad_medida
+        - precio_compra
+        - precio_minorista
+        - precio_mayorista
+        - stock_minimo
+      properties:
+        cod_producto:
+          type: string
+          maxLength: 100
+          example: PROD-001
+        nombre:
+          type: string
+          maxLength: 255
+          example: Leche entera
+        categoria_id:
+          type: integer
+          example: 1
+        marca:
+          type: string
+          nullable: true
+          maxLength: 150
+          example: Gloria
+        unidad_medida:
+          type: string
+          maxLength: 50
+          example: lt
+        contenido:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: 1lt
+        precio_compra:
+          type: number
+          format: float
+          minimum: 0
+          example: 2.50
+        precio_minorista:
+          type: number
+          format: float
+          minimum: 0
+          example: 3.50
+        precio_mayorista:
+          type: number
+          format: float
+          minimum: 0
+          example: 3.00
+        stock_minimo:
+          type: integer
+          minimum: 0
+          example: 10
+        activo:
+          type: boolean
+          default: true
+          example: true
+
+    UpdateProductoRequest:
+      type: object
+      properties:
+        cod_producto:
+          type: string
+          maxLength: 100
+          example: PROD-001
+        nombre:
+          type: string
+          maxLength: 255
+          example: Leche entera
+        categoria_id:
+          type: integer
+          example: 1
+        marca:
+          type: string
+          nullable: true
+          maxLength: 150
+          example: Gloria
+        unidad_medida:
+          type: string
+          maxLength: 50
+          example: lt
+        contenido:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: 1lt
+        precio_compra:
+          type: number
+          format: float
+          minimum: 0
+          example: 2.50
+        precio_minorista:
+          type: number
+          format: float
+          minimum: 0
+          example: 3.50
+        precio_mayorista:
+          type: number
+          format: float
+          minimum: 0
+          example: 3.00
+        stock_minimo:
+          type: integer
+          minimum: 0
+          example: 10
+        activo:
+          type: boolean
+          example: true
