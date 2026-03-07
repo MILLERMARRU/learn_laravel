@@ -13,7 +13,7 @@ interface CategoriaRepositoryInterface
 
     public function create(array $data): Categoria;
 
-    public function update(int $id, array $data): Categoria;
+    public function update(Categoria $categoria, array $data): Categoria;
 
-    public function delete(int $id): bool;
+    public function delete(Categoria $categoria): bool;
 }

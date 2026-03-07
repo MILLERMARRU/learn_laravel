@@ -17,7 +17,8 @@ class CategoriaRepository implements CategoriaRepositoryInterface
             $query->where('nombre', 'like', '%' . $filters['search'] . '%');
         }
 
-        $perPage = $filters['per_page'] ?? 15;
+        // Límite máximo de 100 para evitar queries masivos
+        $perPage = min((int) ($filters['per_page'] ?? 15), 100);
 
         return $query->orderBy('id', 'desc')->paginate($perPage);
     }
@@ -32,17 +33,16 @@ class CategoriaRepository implements CategoriaRepositoryInterface
         return Categoria::create($data);
     }
 
-    public function update(int $id, array $data): Categoria
+    public function update(Categoria $categoria, array $data): Categoria
     {
-        $categoria = Categoria::findOrFail($id);
         $categoria->update($data);
 
         return $categoria->fresh();
     }
 
-    public function delete(int $id): bool
+    public function delete(Categoria $categoria): bool
     {
         // Hard delete: elimina el registro definitivamente
-        return Categoria::findOrFail($id)->delete();
+        return $categoria->delete();
     }
 }

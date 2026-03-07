@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\dto\request\StoreCategoriaRequest;
-use App\Http\Controllers\dto\request\UpdateCategoriaRequest;
-use App\Http\Controllers\dto\response\CategoriaResource;
-use App\Services\CategoriaService;
+use App\Http\Requests\StoreCategoriaRequest;
+use App\Http\Requests\UpdateCategoriaRequest;
+use App\Http\Resources\CategoriaResource;
+use App\Models\Categoria;
+use App\Services\Contracts\CategoriaServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
 {
     public function __construct(
-        private readonly CategoriaService $categoriaService
+        private readonly CategoriaServiceInterface $categoriaService
     ) {}
 
     /**
@@ -49,20 +50,10 @@ class CategoriaController extends Controller
     }
 
     /**
-     * GET /api/v1/categorias/{id}
+     * GET /api/v1/categorias/{categoria}
      */
-    public function show(int $id): JsonResponse
+    public function show(Categoria $categoria): JsonResponse
     {
-        $categoria = $this->categoriaService->obtener($id);
-
-        if (! $categoria) {
-            return $this->apiResponse(
-                success: false,
-                message: 'Categoría no encontrada.',
-                status: 404,
-            );
-        }
-
         return $this->apiResponse(
             success: true,
             message: 'Categoría obtenida correctamente.',
@@ -71,21 +62,11 @@ class CategoriaController extends Controller
     }
 
     /**
-     * PUT /api/v1/categorias/{id}
+     * PUT|PATCH /api/v1/categorias/{categoria}
      */
-    public function update(UpdateCategoriaRequest $request, int $id): JsonResponse
+    public function update(UpdateCategoriaRequest $request, Categoria $categoria): JsonResponse
     {
-        $categoria = $this->categoriaService->obtener($id);
-
-        if (! $categoria) {
-            return $this->apiResponse(
-                success: false,
-                message: 'Categoría no encontrada.',
-                status: 404,
-            );
-        }
-
-        $actualizada = $this->categoriaService->actualizar($id, $request->validated());
+        $actualizada = $this->categoriaService->actualizar($categoria, $request->validated());
 
         return $this->apiResponse(
             success: true,
@@ -95,25 +76,12 @@ class CategoriaController extends Controller
     }
 
     /**
-     * DELETE /api/v1/categorias/{id}
+     * DELETE /api/v1/categorias/{categoria}
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Categoria $categoria): JsonResponse
     {
-        $categoria = $this->categoriaService->obtener($id);
+        $this->categoriaService->eliminar($categoria);
 
-        if (! $categoria) {
-            return $this->apiResponse(
-                success: false,
-                message: 'Categoría no encontrada.',
-                status: 404,
-            );
-        }
-
-        $this->categoriaService->eliminar($id);
-
-        return $this->apiResponse(
-            success: true,
-            message: 'Categoría eliminada correctamente.',
-        );
+        return response()->json(null, 204);
     }
 }

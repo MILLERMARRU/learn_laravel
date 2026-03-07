@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\dto\request;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCategoriaRequest extends FormRequest
+class UpdateCategoriaRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,8 @@ class StoreCategoriaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'      => 'required|string|max:255',
+            // 'sometimes' → solo valida el campo si viene en el request
+            'nombre'      => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
         ];
     }

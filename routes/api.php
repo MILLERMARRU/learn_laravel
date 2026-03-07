@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\ProductoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,5 +19,8 @@ Route::prefix('v1')->group(function () {
 
     // ── Categorías ───────────────────────────────────────────
     Route::apiResource('categorias', CategoriaController::class);
+
+    // ── Productos ─────────────────────────────────────────────
+    Route::apiResource('productos', ProductoController::class);
 
 });

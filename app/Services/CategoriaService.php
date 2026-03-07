@@ -4,9 +4,10 @@ namespace App\Services;
 
 use App\Models\Categoria;
 use App\Repositories\Contracts\CategoriaRepositoryInterface;
+use App\Services\Contracts\CategoriaServiceInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class CategoriaService
+class CategoriaService implements CategoriaServiceInterface
 {
     public function __construct(
         private readonly CategoriaRepositoryInterface $categoriaRepository
@@ -27,13 +28,13 @@ class CategoriaService
         return $this->categoriaRepository->create($data);
     }
 
-    public function actualizar(int $id, array $data): Categoria
+    public function actualizar(Categoria $categoria, array $data): Categoria
     {
-        return $this->categoriaRepository->update($id, $data);
+        return $this->categoriaRepository->update($categoria, $data);
     }
 
-    public function eliminar(int $id): bool
+    public function eliminar(Categoria $categoria): bool
     {
-        return $this->categoriaRepository->delete($id);
+        return $this->categoriaRepository->delete($categoria);
     }
 }
