@@ -20,7 +20,7 @@ class CategoriaRepository implements CategoriaRepositoryInterface
         // Límite máximo de 100 para evitar queries masivos
         $perPage = min((int) ($filters['per_page'] ?? 15), 100);
 
-        return $query->orderBy('id', 'desc')->paginate($perPage);
+        return $query->orderBy('id', 'asc')->paginate($perPage);
     }
 
     public function find(int $id): ?Categoria
