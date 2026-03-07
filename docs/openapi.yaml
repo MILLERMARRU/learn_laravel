@@ -14,6 +14,10 @@ tags:
     description: Gestión de categorías de productos
   - name: Productos
     description: Gestión de productos del inventario
+  - name: Almacenes
+    description: Gestión de almacenes y sedes
+  - name: Inventario
+    description: Stock de productos por almacén
 
 # ══ PATHS ═══════════════════════════════════════════════════════
 
@@ -308,6 +312,312 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ── Almacenes ─────────────────────────────────────────────────
+
+  /almacenes:
+    get:
+      tags: [Almacenes]
+      summary: Listar almacenes
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por nombre, responsable o dirección
+          schema:
+            type: string
+            example: central
+        - name: activo
+          in: query
+          description: Filtrar por estado activo/inactivo
+          schema:
+            type: boolean
+            example: true
+        - name: con_eliminados
+          in: query
+          description: Incluir almacenes con soft delete
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Almacen'
+
+    post:
+      tags: [Almacenes]
+      summary: Crear almacén
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreAlmacenRequest'
+      responses:
+        '201':
+          description: Almacén creado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Almacen'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /almacenes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Almacenes]
+      summary: Obtener almacén por ID
+      responses:
+        '200':
+          description: Almacén obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Almacen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Almacenes]
+      summary: Actualizar almacén (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlmacenRequest'
+      responses:
+        '200':
+          description: Almacén actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Almacen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Almacenes]
+      summary: Actualizar almacén (parcial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlmacenRequest'
+      responses:
+        '200':
+          description: Almacén actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Almacen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Almacenes]
+      summary: Eliminar almacén (soft delete)
+      description: Establece `deleted_at`. El registro permanece en la BD para preservar historial de ventas.
+      responses:
+        '204':
+          description: Almacén eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Inventario ────────────────────────────────────────────────
+
+  /inventario:
+    get:
+      tags: [Inventario]
+      summary: Listar registros de inventario
+      parameters:
+        - name: producto_id
+          in: query
+          description: Filtrar por producto
+          schema:
+            type: integer
+            example: 1
+        - name: almacen_id
+          in: query
+          description: Filtrar por almacén
+          schema:
+            type: integer
+            example: 1
+        - name: bajo_minimo
+          in: query
+          description: Solo registros con stock por debajo del mínimo
+          schema:
+            type: boolean
+            example: false
+        - name: per_page
+          in: query
+          description: Registros por página (máximo 100)
+          schema:
+            type: integer
+            default: 15
+            maximum: 100
+      responses:
+        '200':
+          description: Inventario obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Inventario'
+
+    post:
+      tags: [Inventario]
+      summary: Crear registro de inventario
+      description: Asigna un producto a un almacén con su stock inicial. La combinación producto_id + almacen_id debe ser única.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreInventarioRequest'
+      responses:
+        '201':
+          description: Registro de inventario creado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Inventario'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /inventario/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Inventario]
+      summary: Obtener registro de inventario por ID
+      responses:
+        '200':
+          description: Registro obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Inventario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Inventario]
+      summary: Actualizar inventario (completo)
+      description: Actualización manual de cantidades. ultima_actualizacion se recalcula automáticamente al cambiar cantidad o cantidad_reservada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventarioRequest'
+      responses:
+        '200':
+          description: Inventario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Inventario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Inventario]
+      summary: Actualizar inventario (parcial)
+      description: Actualiza solo los campos enviados. ultima_actualizacion se recalcula automáticamente al cambiar cantidad o cantidad_reservada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventarioRequest'
+      responses:
+        '200':
+          description: Inventario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Inventario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Inventario]
+      summary: Eliminar registro de inventario (hard delete)
+      description: Elimina definitivamente el registro. Es seguro porque inventario no es FK en otras tablas — el historial vive en movimientos.
+      responses:
+        '204':
+          description: Registro eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 # ══ COMPONENTS ══════════════════════════════════════════════════
 
 components:
@@ -549,6 +859,191 @@ components:
         activo:
           type: boolean
           default: true
+          example: true
+
+    # ── Almacén ───────────────────────────────────────────────
+
+    Almacen:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Licorería Central
+        descripcion:
+          type: string
+          nullable: true
+          example: Sede principal
+        direccion:
+          type: string
+          example: Av. Grau 123
+        responsable:
+          type: string
+          example: Juan Pérez
+        telefono:
+          type: string
+          nullable: true
+          example: '999111222'
+        activo:
+          type: boolean
+          example: true
+        eliminado_en:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+
+    StoreAlmacenRequest:
+      type: object
+      required: [nombre, direccion, responsable]
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Licorería Central
+        descripcion:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: Sede principal
+        direccion:
+          type: string
+          maxLength: 255
+          example: Av. Grau 123
+        responsable:
+          type: string
+          maxLength: 150
+          example: Juan Pérez
+        telefono:
+          type: string
+          nullable: true
+          maxLength: 20
+          example: '999111222'
+        activo:
+          type: boolean
+          default: true
+          example: true
+
+    # ── Inventario ────────────────────────────────────────────
+
+    Inventario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        cantidad:
+          type: integer
+          example: 50
+        cantidad_reservada:
+          type: integer
+          example: 5
+        cantidad_disponible:
+          type: integer
+          description: cantidad - cantidad_reservada (calculado en el Resource)
+          example: 45
+        cantidad_minima:
+          type: integer
+          example: 10
+        bajo_minimo:
+          type: boolean
+          description: true si cantidad < cantidad_minima
+          example: false
+        ultima_actualizacion:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        producto:
+          $ref: '#/components/schemas/Producto'
+        almacen:
+          $ref: '#/components/schemas/Almacen'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+
+    StoreInventarioRequest:
+      type: object
+      required: [producto_id, almacen_id, cantidad]
+      properties:
+        producto_id:
+          type: integer
+          example: 1
+        almacen_id:
+          type: integer
+          example: 1
+        cantidad:
+          type: integer
+          minimum: 0
+          example: 50
+        cantidad_reservada:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 0
+        cantidad_minima:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 10
+
+    UpdateInventarioRequest:
+      type: object
+      properties:
+        cantidad:
+          type: integer
+          minimum: 0
+          example: 60
+        cantidad_reservada:
+          type: integer
+          minimum: 0
+          example: 5
+        cantidad_minima:
+          type: integer
+          minimum: 0
+          example: 10
+
+    UpdateAlmacenRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Licorería Central
+        descripcion:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: Sede principal
+        direccion:
+          type: string
+          maxLength: 255
+          example: Av. Grau 123
+        responsable:
+          type: string
+          maxLength: 150
+          example: Juan Pérez
+        telefono:
+          type: string
+          nullable: true
+          maxLength: 20
+          example: '999111222'
+        activo:
+          type: boolean
           example: true
 
     UpdateProductoRequest:

@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\AlmacenController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\ProductoController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,5 +24,11 @@ Route::prefix('v1')->group(function () {
 
     // ── Productos ─────────────────────────────────────────────
     Route::apiResource('productos', ProductoController::class);
+
+    // ── Almacenes ─────────────────────────────────────────────
+    Route::apiResource('almacenes', AlmacenController::class);
+
+    // ── Inventario ────────────────────────────────────────────
+    Route::apiResource('inventario', InventarioController::class);
 
 });

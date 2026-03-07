@@ -34,7 +34,7 @@ class ProductoRepository implements ProductoRepositoryInterface
 
         $perPage = min((int) ($filters['per_page'] ?? 15), 100);
 
-        return $query->orderBy('id', 'desc')->paginate($perPage);
+        return $query->orderBy('id', 'asc')->paginate($perPage);
     }
 
     public function find(int $id): ?Producto
