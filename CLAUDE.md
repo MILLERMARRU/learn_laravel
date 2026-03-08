@@ -66,7 +66,7 @@ Request → Route → Controller → Service → Repository → Model → MySQL
 - Route Model Binding en todos los controllers — Laravel resuelve 404 automáticamente
 - `destroy()` retorna **HTTP 204 No Content** siempre (sin body)
 - `store()` retorna **HTTP 201 Created**
-- Soft delete en módulos con historial (productos). Hard delete en módulos sin dependencias (categorias)
+- Soft delete en módulos con historial. Hard delete en módulos sin historial
 
 ## Formato de respuesta estándar
 
@@ -81,49 +81,152 @@ Request → Route → Controller → Service → Repository → Model → MySQL
 El método `apiResponse()` en `app/Http/Controllers/Controller.php` genera este formato.
 `destroy()` usa `response()->json(null, 204)` directamente (sin body).
 
+## Reglas de delete
+
+| Tipo | Módulos | Comportamiento al eliminar |
+|------|---------|---------------------------|
+| Hard delete | categorias, roles, inventario | Elimina definitivamente. Si tiene dependencias → 409 con mensaje claro |
+| Soft delete | productos, almacenes, usuarios | Setea `activo = false` + `deleted_at`. Registro permanece en BD |
+
+**Hard delete con dependencias — patrón obligatorio:**
+1. Model tiene relación `hasMany` hacia la tabla dependiente
+2. Service verifica con `$model->relacion()->withTrashed()->exists()` antes de borrar
+3. Si hay dependencias lanza `\RuntimeException('Mensaje claro en español')`
+4. Controller captura con `try/catch` y retorna 409
+
+**Soft delete — patrón obligatorio:**
+```php
+// En el Service::eliminar()
+$model->activo = false;
+$model->save();
+return $this->repository->delete($model); // setea deleted_at
+```
+
+## Convención de rutas con apiResource
+
+Cuando `Str::singular()` genera un nombre incorrecto, forzar el parámetro con `->parameters()`:
+
+```php
+// routes/api.php
+Route::apiResource('almacenes', AlmacenController::class)
+    ->parameters(['almacenes' => 'almacen']); // evita {almacene}
+
+Route::apiResource('roles', RolController::class)
+    ->parameters(['roles' => 'rol']);          // evita {role}
+```
+
+El nombre del parámetro de ruta DEBE coincidir con la variable del controller (`$almacen`, `$rol`).
+
 ## Base de datos
 
 ```
-categorias                    productos
-──────────                    ─────────
-id                            id
-nombre                        cod_producto (unique)
-descripcion                   nombre
-timestamps                    categoria_id (FK → categorias, restrictOnDelete)
-                              marca (nullable)
-                              unidad_medida
-                              contenido (nullable)
-                              precio_compra decimal(10,2)
-                              precio_minorista decimal(10,2)
-                              precio_mayorista decimal(10,2)
-                              stock_minimo unsignedInteger
-                              activo boolean default true
-                              deleted_at (soft delete)
-                              timestamps
+categorias          productos                 almacenes
+──────────          ─────────                 ─────────
+id                  id                        id
+nombre              cod_producto (unique)      nombre
+descripcion         nombre                    descripcion (nullable)
+timestamps          categoria_id (FK→cat)     direccion
+                    marca (nullable)          responsable
+                    unidad_medida             telefono (nullable)
+                    contenido (nullable)      activo boolean
+                    precio_compra             deleted_at
+                    precio_minorista          timestamps
+                    precio_mayorista
+                    stock_minimo              inventario
+                    activo boolean            ─────────
+                    deleted_at                id
+                    timestamps                producto_id (FK→productos)
+                                              almacen_id (FK→almacenes)
+roles                                         cantidad
+─────                                         cantidad_reservada
+id                  usuarios                  cantidad_minima
+nombre              ────────                  ultima_actualizacion
+descripcion         id                        timestamps
+timestamps          rol_id (FK→roles)
+                    username (unique)         ventas
+                    email (unique)            ──────
+                    password_hash             id
+                    must_change_password      usuario_id (FK→usuarios)
+                    activo boolean            almacen_id (FK→almacenes)
+                    ultimo_acceso (nullable)  fecha (date)
+                    deleted_at                cliente
+                    timestamps                total decimal(10,2)
+                                              numero_comprobante (unique)
+                                              tipo_pago (enum)
+                                              estado (enum)
+                                              activo boolean
+                                              deleted_at
+                                              timestamps
 ```
 
+**Enums ventas:**
+- `tipo_pago`: efectivo | tarjeta | transferencia | otro
+- `estado`: pendiente | completada | cancelada
+
 **Relaciones Eloquent:**
-- `Categoria` hasMany `Producto`
-- `Producto` belongsTo `Categoria`
+- `Categoria` hasMany `Producto` · `Producto` belongsTo `Categoria`
+- `Rol` hasMany `Usuario` · `Usuario` belongsTo `Rol`
+- `Almacen` ↔ `Producto` via `Inventario`
+- `Venta` belongsTo `Usuario` · `Venta` belongsTo `Almacen`
 
 ## Endpoints implementados
 
 ```
-# Categorías (hard delete)
-GET    /api/v1/categorias              ?search=
+# Categorías (hard delete, 409 si tiene productos)
+GET    /api/v1/categorias              ?search= &per_page=
 POST   /api/v1/categorias
-GET    /api/v1/categorias/{id}
-PUT    /api/v1/categorias/{id}
-PATCH  /api/v1/categorias/{id}
-DELETE /api/v1/categorias/{id}         → 204
+GET    /api/v1/categorias/{categoria}
+PUT    /api/v1/categorias/{categoria}
+PATCH  /api/v1/categorias/{categoria}
+DELETE /api/v1/categorias/{categoria}  → 204 | 409
 
 # Productos (soft delete)
 GET    /api/v1/productos               ?search= &categoria_id= &activo= &con_eliminados= &per_page=
 POST   /api/v1/productos
-GET    /api/v1/productos/{id}
-PUT    /api/v1/productos/{id}
-PATCH  /api/v1/productos/{id}
-DELETE /api/v1/productos/{id}          → 204 (soft delete)
+GET    /api/v1/productos/{producto}
+PUT    /api/v1/productos/{producto}
+PATCH  /api/v1/productos/{producto}
+DELETE /api/v1/productos/{producto}    → 204
+
+# Almacenes (soft delete)
+GET    /api/v1/almacenes               ?search= &activo= &con_eliminados= &per_page=
+POST   /api/v1/almacenes
+GET    /api/v1/almacenes/{almacen}
+PUT    /api/v1/almacenes/{almacen}
+PATCH  /api/v1/almacenes/{almacen}
+DELETE /api/v1/almacenes/{almacen}     → 204
+
+# Inventario (hard delete)
+GET    /api/v1/inventario              ?producto_id= &almacen_id= &bajo_minimo= &per_page=
+POST   /api/v1/inventario
+GET    /api/v1/inventario/{inventario}
+PUT    /api/v1/inventario/{inventario}
+PATCH  /api/v1/inventario/{inventario}
+DELETE /api/v1/inventario/{inventario} → 204
+
+# Roles (hard delete, 409 si tiene usuarios)
+GET    /api/v1/roles                   ?search=
+POST   /api/v1/roles
+GET    /api/v1/roles/{rol}
+PUT    /api/v1/roles/{rol}
+PATCH  /api/v1/roles/{rol}
+DELETE /api/v1/roles/{rol}             → 204 | 409
+
+# Usuarios (soft delete)
+GET    /api/v1/usuarios                ?search= &rol_id= &activo= &con_eliminados=
+POST   /api/v1/usuarios
+GET    /api/v1/usuarios/{usuario}
+PUT    /api/v1/usuarios/{usuario}
+PATCH  /api/v1/usuarios/{usuario}
+DELETE /api/v1/usuarios/{usuario}      → 204
+
+# Ventas (soft delete)
+GET    /api/v1/ventas                  ?search= &usuario_id= &almacen_id= &estado= &tipo_pago= &fecha_desde= &fecha_hasta= &con_eliminados=
+POST   /api/v1/ventas
+GET    /api/v1/ventas/{venta}
+PUT    /api/v1/ventas/{venta}
+PATCH  /api/v1/ventas/{venta}
+DELETE /api/v1/ventas/{venta}          → 204
 ```
 
 ## Documentación Swagger
@@ -140,15 +243,31 @@ CategoriaRepositoryInterface → CategoriaRepository
 CategoriaServiceInterface    → CategoriaService
 ProductoRepositoryInterface  → ProductoRepository
 ProductoServiceInterface     → ProductoService
+AlmacenRepositoryInterface   → AlmacenRepository
+AlmacenServiceInterface      → AlmacenService
+InventarioRepositoryInterface → InventarioRepository
+InventarioServiceInterface   → InventarioService
+RolRepositoryInterface       → RolRepository
+RolServiceInterface          → RolService
+UsuarioRepositoryInterface   → UsuarioRepository
+UsuarioServiceInterface      → UsuarioService
+VentaRepositoryInterface     → VentaRepository
+VentaServiceInterface        → VentaService
 ```
 
 Provider registrado en `bootstrap/app.php` via `withProviders()`.
 
 ## Orden de implementación
 
-1. ✅ Categorías CRUD — refactorizado con SOLID completo
+1. ✅ Categorías CRUD — hard delete, 409 si tiene productos
 2. ✅ Productos CRUD — soft delete, filtros, relación con Categoria
 3. ✅ Swagger UI — documentación interactiva en /docs
-4. ⬜ Almacenes CRUD + pivot almacen_producto
-5. ⬜ Auth JWT (login, register, logout, me)
-6. ⬜ Proteger rutas con middleware `auth:api`
+4. ✅ Almacenes CRUD — soft delete
+5. ✅ Inventario CRUD — hard delete, pivot almacen/producto
+6. ✅ Roles CRUD — hard delete, 409 si tiene usuarios
+7. ✅ Usuarios CRUD — soft delete, password hasheado, relación con Rol
+8. ✅ Ventas CRUD — soft delete, filtros por fecha/estado/tipo_pago, embeds usuario y almacen
+9. ✅ Movimientos — auditoría de entradas/salidas, actualiza inventario en transacción
+10. ⬜ Detalle ventas (detalle_ventas con FK venta_id)
+11. ⬜ Auth JWT (login, register, logout, me)
+12. ⬜ Proteger rutas con middleware `auth:api`
