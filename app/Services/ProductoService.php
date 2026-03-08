@@ -35,6 +35,10 @@ class ProductoService implements ProductoServiceInterface
 
     public function eliminar(Producto $producto): bool
     {
+        // Desactivar antes del soft delete para consistencia de estado
+        $producto->activo = false;
+        $producto->save();
+
         return $this->productoRepository->delete($producto);
     }
 }
