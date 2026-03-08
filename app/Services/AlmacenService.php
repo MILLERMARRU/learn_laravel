@@ -35,6 +35,10 @@ class AlmacenService implements AlmacenServiceInterface
 
     public function eliminar(Almacen $almacen): bool
     {
+        // Desactivar antes del soft delete para consistencia de estado
+        $almacen->activo = false;
+        $almacen->save();
+
         return $this->almacenRepository->delete($almacen);
     }
 }

@@ -35,6 +35,13 @@ class CategoriaService implements CategoriaServiceInterface
 
     public function eliminar(Categoria $categoria): bool
     {
+        // Verificar dependencias antes del hard delete
+        if ($categoria->productos()->exists()) {
+            throw new \RuntimeException(
+                'No se puede eliminar la categoría porque tiene productos asociados.'
+            );
+        }
+
         return $this->categoriaRepository->delete($categoria);
     }
 }

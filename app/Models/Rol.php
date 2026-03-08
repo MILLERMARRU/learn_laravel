@@ -6,17 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Categoria extends Model
+class Rol extends Model
 {
     use HasFactory;
+
+    // Laravel pluraliza "Rol" como "rols" — forzamos el nombre correcto
+    protected $table = 'roles';
 
     protected $fillable = [
         'nombre',
         'descripcion',
     ];
 
-    public function productos(): HasMany
+    public function usuarios(): HasMany
     {
-        return $this->hasMany(Producto::class);
+        return $this->hasMany(Usuario::class);
     }
 }

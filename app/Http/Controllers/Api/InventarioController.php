@@ -19,11 +19,11 @@ class InventarioController extends Controller
 
     /**
      * GET /api/v1/inventario
-     * Query params: ?producto_id= &almacen_id= &bajo_minimo= &per_page=
+     * Query params: ?producto_id= &almacen_id= &bajo_minimo=
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['producto_id', 'almacen_id', 'bajo_minimo', 'per_page']);
+        $filters = $request->only(['producto_id', 'almacen_id', 'bajo_minimo']);
 
         $paginado = $this->inventarioService->listar($filters);
 
