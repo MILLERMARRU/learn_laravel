@@ -18,6 +18,14 @@ tags:
     description: Gestión de almacenes y sedes
   - name: Inventario
     description: Stock de productos por almacén
+  - name: Roles
+    description: Gestión de roles del sistema
+  - name: Usuarios
+    description: Gestión de usuarios del sistema
+  - name: Ventas
+    description: Gestión de ventas
+  - name: Movimientos
+    description: Registro de entradas y salidas de inventario (auditoría)
 
 # ══ PATHS ═══════════════════════════════════════════════════════
 
@@ -485,13 +493,6 @@ paths:
           schema:
             type: boolean
             example: false
-        - name: per_page
-          in: query
-          description: Registros por página (máximo 100)
-          schema:
-            type: integer
-            default: 15
-            maximum: 100
       responses:
         '200':
           description: Inventario obtenido correctamente
@@ -615,6 +616,592 @@ paths:
       responses:
         '204':
           description: Registro eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Roles ──────────────────────────────────────────────────────
+
+  /roles:
+    get:
+      tags: [Roles]
+      summary: Listar roles
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por nombre
+          schema:
+            type: string
+            example: admin
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Rol'
+
+    post:
+      tags: [Roles]
+      summary: Crear rol
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreRolRequest'
+      responses:
+        '201':
+          description: Rol creado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Rol'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /roles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Roles]
+      summary: Obtener rol por ID
+      responses:
+        '200':
+          description: Rol obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Rol'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Roles]
+      summary: Actualizar rol (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRolRequest'
+      responses:
+        '200':
+          description: Rol actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Rol'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Roles]
+      summary: Actualizar rol (parcial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRolRequest'
+      responses:
+        '200':
+          description: Rol actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Rol'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Roles]
+      summary: Eliminar rol (hard delete)
+      description: Elimina definitivamente el registro. No se usa soft delete porque los roles no tienen historial.
+      responses:
+        '204':
+          description: Rol eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Usuarios ───────────────────────────────────────────────────
+
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por username o email
+          schema:
+            type: string
+            example: miller
+        - name: rol_id
+          in: query
+          description: Filtrar por rol
+          schema:
+            type: integer
+            example: 1
+        - name: activo
+          in: query
+          description: Filtrar por estado activo/inactivo
+          schema:
+            type: boolean
+            example: true
+        - name: con_eliminados
+          in: query
+          description: Incluir usuarios con soft delete
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Usuario'
+
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreUsuarioRequest'
+      responses:
+        '201':
+          description: Usuario creado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Usuario'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /usuarios/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      responses:
+        '200':
+          description: Usuario obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Usuario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUsuarioRequest'
+      responses:
+        '200':
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Usuario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Usuarios]
+      summary: Actualizar usuario (parcial)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUsuarioRequest'
+      responses:
+        '200':
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Usuario'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Usuarios]
+      summary: Eliminar usuario (soft delete)
+      description: Establece `deleted_at`. El registro permanece en la BD para preservar historial de ventas.
+      responses:
+        '204':
+          description: Usuario eliminado correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Ventas ─────────────────────────────────────────────────────
+
+  /ventas:
+    get:
+      tags: [Ventas]
+      summary: Listar ventas
+      parameters:
+        - name: search
+          in: query
+          description: Filtrar por cliente o número de comprobante
+          schema:
+            type: string
+            example: Juan
+        - name: usuario_id
+          in: query
+          description: Filtrar por usuario
+          schema:
+            type: integer
+            example: 1
+        - name: almacen_id
+          in: query
+          description: Filtrar por almacén
+          schema:
+            type: integer
+            example: 1
+        - name: estado
+          in: query
+          description: Filtrar por estado
+          schema:
+            type: string
+            enum: [pendiente, completada, cancelada]
+            example: completada
+        - name: tipo_pago
+          in: query
+          description: Filtrar por tipo de pago
+          schema:
+            type: string
+            enum: [efectivo, tarjeta, transferencia, otro]
+            example: efectivo
+        - name: fecha_desde
+          in: query
+          description: Filtrar ventas desde esta fecha (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-03-01'
+        - name: fecha_hasta
+          in: query
+          description: Filtrar ventas hasta esta fecha (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-03-31'
+        - name: con_eliminados
+          in: query
+          description: Incluir ventas con soft delete
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Venta'
+
+    post:
+      tags: [Ventas]
+      summary: Crear venta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreVentaRequest'
+      responses:
+        '201':
+          description: Venta creada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Venta'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /ventas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Ventas]
+      summary: Obtener venta por ID
+      responses:
+        '200':
+          description: Venta obtenida correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Venta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Ventas]
+      summary: Actualizar venta (completo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVentaRequest'
+      responses:
+        '200':
+          description: Venta actualizada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Venta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Ventas]
+      summary: Actualizar venta (parcial)
+      description: Útil para cambiar solo el `estado` (ej. cancelar una venta).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVentaRequest'
+      responses:
+        '200':
+          description: Venta actualizada correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Venta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Ventas]
+      summary: Eliminar venta (soft delete)
+      description: Establece `deleted_at`. El registro permanece en la BD para preservar el historial de detalle_ventas.
+      responses:
+        '204':
+          description: Venta eliminada correctamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Movimientos ───────────────────────────────────────────────
+
+  /movimientos:
+    get:
+      tags: [Movimientos]
+      summary: Listar movimientos
+      parameters:
+        - name: producto_id
+          in: query
+          description: Filtrar por producto
+          schema:
+            type: integer
+            example: 1
+        - name: almacen_id
+          in: query
+          description: Filtrar por almacén
+          schema:
+            type: integer
+            example: 1
+        - name: usuario_id
+          in: query
+          description: Filtrar por usuario que registró el movimiento
+          schema:
+            type: integer
+            example: 1
+        - name: tipo
+          in: query
+          description: Filtrar por tipo de movimiento
+          schema:
+            type: string
+            enum: [entrada, salida]
+            example: entrada
+        - name: fecha_desde
+          in: query
+          description: Filtrar desde esta fecha (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-03-01'
+        - name: fecha_hasta
+          in: query
+          description: Filtrar hasta esta fecha (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-03-31'
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Movimiento'
+
+    post:
+      tags: [Movimientos]
+      summary: Registrar movimiento
+      description: |
+        Registra una entrada o salida de stock.
+        - **entrada**: aumenta la cantidad en inventario
+        - **salida**: disminuye la cantidad en inventario (error 422 si stock insuficiente)
+
+        La actualización de inventario y el registro del movimiento ocurren en una sola transacción atómica.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreMovimientoRequest'
+      responses:
+        '201':
+          description: Movimiento registrado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Movimiento'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /movimientos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Movimientos]
+      summary: Obtener movimiento por ID
+      responses:
+        '200':
+          description: Movimiento obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Movimiento'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -1096,3 +1683,346 @@ components:
         activo:
           type: boolean
           example: true
+
+    # ── Rol ───────────────────────────────────────────────────
+
+    Rol:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Administrador
+        descripcion:
+          type: string
+          nullable: true
+          example: Acceso total al sistema
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+
+    StoreRolRequest:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Administrador
+        descripcion:
+          type: string
+          nullable: true
+          example: Acceso total al sistema
+
+    UpdateRolRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 255
+          example: Administrador
+        descripcion:
+          type: string
+          nullable: true
+          example: Acceso total al sistema
+
+    # ── Usuario ───────────────────────────────────────────────
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: miller
+        email:
+          type: string
+          format: email
+          example: miller@ejemplo.com
+        must_change_password:
+          type: boolean
+          example: false
+        activo:
+          type: boolean
+          example: true
+        ultimo_acceso:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-03-07 10:00:00'
+        eliminado_en:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        rol:
+          $ref: '#/components/schemas/Rol'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+
+    StoreUsuarioRequest:
+      type: object
+      required: [rol_id, username, email, password]
+      properties:
+        rol_id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          maxLength: 100
+          example: miller
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: miller@ejemplo.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: secreto123
+        must_change_password:
+          type: boolean
+          default: false
+          example: false
+        activo:
+          type: boolean
+          default: true
+          example: true
+
+    UpdateUsuarioRequest:
+      type: object
+      properties:
+        rol_id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          maxLength: 100
+          example: miller
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: miller@ejemplo.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: nuevosecreto123
+        must_change_password:
+          type: boolean
+          example: false
+        activo:
+          type: boolean
+          example: true
+
+    # ── Venta ─────────────────────────────────────────────────
+
+    Venta:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-07'
+        cliente:
+          type: string
+          example: Juan Pérez
+        total:
+          type: number
+          format: float
+          example: 150.00
+        numero_comprobante:
+          type: string
+          example: F001-000001
+        tipo_pago:
+          type: string
+          enum: [efectivo, tarjeta, transferencia, otro]
+          example: efectivo
+        estado:
+          type: string
+          enum: [pendiente, completada, cancelada]
+          description: Estado del negocio (independiente de si está eliminado)
+          example: completada
+        activo:
+          type: boolean
+          description: false cuando la venta fue eliminada con soft delete
+          example: true
+        eliminado_en:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        almacen:
+          $ref: '#/components/schemas/Almacen'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+        actualizado_en:
+          type: string
+          format: date-time
+          example: '2026-03-07 10:00:00'
+
+    StoreVentaRequest:
+      type: object
+      required: [usuario_id, almacen_id, fecha, cliente, total, numero_comprobante, tipo_pago, estado]
+      properties:
+        usuario_id:
+          type: integer
+          example: 1
+        almacen_id:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-07'
+        cliente:
+          type: string
+          maxLength: 255
+          example: Juan Pérez
+        total:
+          type: number
+          format: float
+          minimum: 0
+          example: 150.00
+        numero_comprobante:
+          type: string
+          maxLength: 50
+          example: F001-000001
+        tipo_pago:
+          type: string
+          enum: [efectivo, tarjeta, transferencia, otro]
+          example: efectivo
+        estado:
+          type: string
+          enum: [pendiente, completada, cancelada]
+          example: pendiente
+        activo:
+          type: boolean
+          default: true
+          example: true
+
+    UpdateVentaRequest:
+      type: object
+      properties:
+        usuario_id:
+          type: integer
+          example: 1
+        almacen_id:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-07'
+        cliente:
+          type: string
+          maxLength: 255
+          example: Juan Pérez
+        total:
+          type: number
+          format: float
+          minimum: 0
+          example: 150.00
+        numero_comprobante:
+          type: string
+          maxLength: 50
+          example: F001-000001
+        tipo_pago:
+          type: string
+          enum: [efectivo, tarjeta, transferencia, otro]
+          example: tarjeta
+        estado:
+          type: string
+          enum: [pendiente, completada, cancelada]
+          example: completada
+
+    # ── Movimiento ────────────────────────────────────────────────
+
+    Movimiento:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        tipo:
+          type: string
+          enum: [entrada, salida]
+          example: entrada
+        cantidad:
+          type: number
+          format: float
+          example: 10.00
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-08'
+        descripcion:
+          type: string
+          nullable: true
+          example: Reposición de stock mensual
+        producto:
+          $ref: '#/components/schemas/Producto'
+        almacen:
+          $ref: '#/components/schemas/Almacen'
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-08 10:00:00'
+
+    StoreMovimientoRequest:
+      type: object
+      required: [producto_id, almacen_id, usuario_id, tipo, cantidad, fecha]
+      properties:
+        producto_id:
+          type: integer
+          example: 1
+        almacen_id:
+          type: integer
+          example: 1
+        usuario_id:
+          type: integer
+          example: 1
+        tipo:
+          type: string
+          enum: [entrada, salida]
+          example: entrada
+        cantidad:
+          type: number
+          format: float
+          minimum: 0.01
+          example: 10.00
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-08'
+        descripcion:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: Reposición de stock mensual
