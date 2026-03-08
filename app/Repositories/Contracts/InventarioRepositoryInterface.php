@@ -15,6 +15,8 @@ interface InventarioRepositoryInterface
 
     public function update(Inventario $inventario, array $data): Inventario;
 
+    public function findByProductoAlmacen(int $productoId, int $almacenId): ?Inventario;
+
     /** Hard delete — no tiene historial propio ni es FK en otras tablas */
     public function delete(Inventario $inventario): bool;
 }

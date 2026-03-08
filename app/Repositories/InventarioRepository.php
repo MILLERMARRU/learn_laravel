@@ -25,9 +25,7 @@ class InventarioRepository implements InventarioRepositoryInterface
             $query->whereColumn('cantidad', '<', 'cantidad_minima');
         }
 
-        $perPage = min((int) ($filters['per_page'] ?? 15), 100);
-
-        return $query->orderBy('id', 'asc')->paginate($perPage);
+        return $query->orderBy('id', 'asc')->paginate(15);
     }
 
     public function find(int $id): ?Inventario
@@ -50,6 +48,13 @@ class InventarioRepository implements InventarioRepositoryInterface
         $inventario->update($data);
 
         return $inventario->fresh(['producto', 'almacen']);
+    }
+
+    public function findByProductoAlmacen(int $productoId, int $almacenId): ?Inventario
+    {
+        return Inventario::where('producto_id', $productoId)
+            ->where('almacen_id', $almacenId)
+            ->first();
     }
 
     public function delete(Inventario $inventario): bool
