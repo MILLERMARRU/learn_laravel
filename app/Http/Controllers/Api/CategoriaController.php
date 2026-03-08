@@ -80,7 +80,15 @@ class CategoriaController extends Controller
      */
     public function destroy(Categoria $categoria): JsonResponse
     {
-        $this->categoriaService->eliminar($categoria);
+        try {
+            $this->categoriaService->eliminar($categoria);
+        } catch (\RuntimeException $e) {
+            return $this->apiResponse(
+                success: false,
+                message: $e->getMessage(),
+                status: 409,
+            );
+        }
 
         return response()->json(null, 204);
     }
