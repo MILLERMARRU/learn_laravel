@@ -25,6 +25,10 @@ class Producto extends Model
         'activo',
     ];
 
+    protected $attributes = [
+        'activo' => true,
+    ];
+
     protected $casts = [
         'precio_compra'     => 'decimal:2',
         'precio_minorista'  => 'decimal:2',
