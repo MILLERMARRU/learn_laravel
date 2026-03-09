@@ -1,15 +1,44 @@
 openapi: 3.0.3
 
 info:
-  title: API Inventario
-  description: API REST para gestión de categorías y productos
+  title: API Inventario — Licorería
+  description: |
+    API REST para gestión de inventario, ventas y movimientos de una licorería.
+
+    ## Autenticación
+    La API usa **JWT (Bearer Token)**. Para acceder a los endpoints protegidos:
+    1. Llama a `POST /auth/login` con email y password
+    2. Copia el `access_token` de la respuesta
+    3. Haz clic en **Authorize** (candado) e ingresa: `Bearer {access_token}`
+
+    El token expira en **60 minutos**. Para renovarlo usa `POST /auth/refresh`
+    (el refresh token viaja automáticamente en una cookie httpOnly).
+
+    ## Roles
+    | Rol | Acceso |
+    |-----|--------|
+    | **Administrador** | Todos los endpoints |
+    | **Vendedor** | Lectura de catálogo + crear/completar ventas con detalles |
+
+    ## Credenciales de prueba
+    | Usuario | Email | Password | Rol |
+    |---------|-------|----------|-----|
+    | miller | miller@licoreria.com | admin123 | Administrador |
+    | carlos | carlos@licoreria.com | vendedor123 | Vendedor |
   version: 1.0.0
 
 servers:
   - url: http://localhost:8000/api/v1
     description: Desarrollo local
 
+# Seguridad global — todos los endpoints requieren Bearer token
+# Los endpoints públicos (login, refresh) lo sobreescriben con security: []
+security:
+  - BearerAuth: []
+
 tags:
+  - name: Auth
+    description: "Autenticación JWT — login, logout, refresh y perfil"
   - name: Categorías
     description: Gestión de categorías de productos
   - name: Productos
@@ -19,17 +48,169 @@ tags:
   - name: Inventario
     description: Stock de productos por almacén
   - name: Roles
-    description: Gestión de roles del sistema
+    description: "Solo Administrador — gestión de roles del sistema"
   - name: Usuarios
-    description: Gestión de usuarios del sistema
+    description: "Solo Administrador — gestión de usuarios del sistema"
   - name: Ventas
     description: Gestión de ventas
   - name: Movimientos
     description: Registro de entradas y salidas de inventario (auditoría)
+  - name: Detalle Ventas
+    description: Líneas de detalle de una venta (sub-recurso de Ventas, registro inmutable)
 
 # ══ PATHS ═══════════════════════════════════════════════════════
 
 paths:
+
+  # ── Auth ──────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      description: |
+        Autentica al usuario y retorna un **access token JWT** (60 min).
+        El **refresh token** (30 días) se envía automáticamente en una cookie httpOnly.
+
+        **Validaciones:**
+        - Credenciales incorrectas → 401
+        - Usuario con `activo = false` → 401
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada correctamente
+          headers:
+            Set-Cookie:
+              description: "refresh_token=...; HttpOnly; SameSite=Strict; Path=/api/v1/auth"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthResponse'
+              example:
+                success: true
+                message: Sesión iniciada correctamente.
+                data:
+                  access_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  token_type: bearer
+                  expires_in: 3600
+                  usuario:
+                    id: 3
+                    username: carlos
+                    email: carlos@licoreria.com
+                    rol:
+                      nombre: Vendedor
+        '401':
+          description: Credenciales incorrectas o usuario desactivado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                credenciales_incorrectas:
+                  summary: Credenciales incorrectas
+                  value:
+                    success: false
+                    message: Credenciales incorrectas.
+                usuario_inactivo:
+                  summary: Usuario desactivado
+                  value:
+                    success: false
+                    message: Tu cuenta está desactivada. Contacta al administrador.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Renovar access token
+      description: |
+        Renueva el **access token** usando el **refresh token** de la cookie httpOnly.
+        El navegador/cliente envía la cookie automáticamente.
+
+        - Rota el refresh token (el anterior queda inválido)
+        - Si el refresh token expiró → 401 (debe hacer login nuevamente)
+      security: []
+      responses:
+        '200':
+          description: Token renovado correctamente
+          headers:
+            Set-Cookie:
+              description: Nuevo refresh_token rotado
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Refresh token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                message: Refresh token expirado. Por favor inicia sesión nuevamente.
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión
+      description: |
+        Invalida el **access token** (blacklist JWT) y elimina el **refresh token** de la BD.
+        Limpia la cookie del navegador.
+
+        Requiere `Authorization: Bearer {token}`.
+      responses:
+        '200':
+          description: Sesión cerrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: Sesión cerrada correctamente.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Perfil del usuario autenticado
+      description: Retorna los datos del usuario propietario del token activo.
+      responses:
+        '200':
+          description: Usuario autenticado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Usuario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # ── Categorías ────────────────────────────────────────────────
 
@@ -37,6 +218,7 @@ paths:
     get:
       tags: [Categorías]
       summary: Listar categorías
+      description: "🔐 Admin + Vendedor"
       parameters:
         - name: search
           in: query
@@ -625,6 +807,7 @@ paths:
     get:
       tags: [Roles]
       summary: Listar roles
+      description: "🔐 Solo **Administrador**"
       parameters:
         - name: search
           in: query
@@ -761,6 +944,7 @@ paths:
     get:
       tags: [Usuarios]
       summary: Listar usuarios
+      description: "🔐 Solo **Administrador**"
       parameters:
         - name: search
           in: query
@@ -915,6 +1099,7 @@ paths:
     get:
       tags: [Ventas]
       summary: Listar ventas
+      description: "🔐 Admin + Vendedor"
       parameters:
         - name: search
           in: query
@@ -986,6 +1171,7 @@ paths:
     post:
       tags: [Ventas]
       summary: Crear venta
+      description: "🔐 Admin + Vendedor"
       requestBody:
         required: true
         content:
@@ -1058,7 +1244,10 @@ paths:
     patch:
       tags: [Ventas]
       summary: Actualizar venta (parcial)
-      description: Útil para cambiar solo el `estado` (ej. cancelar una venta).
+      description: |
+        🔐 **Admin + Vendedor** (con restricción de rol):
+        - **Vendedor**: solo puede enviar `{ "estado": "completada" }`
+        - **Administrador**: puede modificar cualquier campo, incluyendo cancelar (`estado: cancelada`)
       requestBody:
         required: true
         content:
@@ -1085,7 +1274,7 @@ paths:
     delete:
       tags: [Ventas]
       summary: Eliminar venta (soft delete)
-      description: Establece `deleted_at`. El registro permanece en la BD para preservar el historial de detalle_ventas.
+      description: "🔐 Solo **Administrador**. Establece `deleted_at`. El registro permanece en la BD para preservar el historial de detalle_ventas."
       responses:
         '204':
           description: Venta eliminada correctamente
@@ -1205,9 +1394,128 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ── Detalle Ventas ────────────────────────────────────────────
+
+  /ventas/{venta_id}/detalles:
+    parameters:
+      - name: venta_id
+        in: path
+        required: true
+        description: ID de la venta
+        schema:
+          type: integer
+          example: 1
+
+    get:
+      tags: [Detalle Ventas]
+      summary: Listar detalles de una venta
+      description: "🔐 Admin + Vendedor — Devuelve todas las líneas de producto asociadas a la venta indicada."
+      responses:
+        '200':
+          description: Listado obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DetalleVenta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Detalle Ventas]
+      summary: Agregar detalle a una venta
+      description: |
+        🔐 **Admin + Vendedor** — Registra una línea de producto en la venta.
+        La operación ocurre en una **transacción atómica**:
+
+        1. Verifica que la venta esté en estado `pendiente`
+        2. Verifica que exista inventario del producto en el almacén de la venta
+        3. Verifica stock suficiente
+        4. Crea el movimiento de salida (descuenta inventario)
+        5. Crea el detalle con el `movimiento_id` generado
+        6. Recalcula `venta.total` sumando todos los `sub_total`
+
+        El cliente **no** envía `almacen_id`, `sub_total` ni `movimiento_id` — se calculan automáticamente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreDetalleVentaRequest'
+      responses:
+        '201':
+          description: Detalle registrado correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DetalleVenta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Stock insuficiente, venta no pendiente o inventario inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                message: "Stock insuficiente. Disponible: 5."
+
+  /ventas/{venta_id}/detalles/{id}:
+    parameters:
+      - name: venta_id
+        in: path
+        required: true
+        description: ID de la venta
+        schema:
+          type: integer
+          example: 1
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Detalle Ventas]
+      summary: Obtener detalle por ID
+      description: Devuelve el detalle indicado verificando que pertenezca a la venta de la URL.
+      responses:
+        '200':
+          description: Detalle obtenido correctamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DetalleVenta'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 # ══ COMPONENTS ══════════════════════════════════════════════════
 
 components:
+
+  # ── Seguridad ─────────────────────────────────────────────────
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Ingresa el token obtenido en `POST /auth/login`.
+        Formato: `Bearer {access_token}`
 
   # ── Parámetros reutilizables ──────────────────────────────────
 
@@ -1231,7 +1539,27 @@ components:
             $ref: '#/components/schemas/ApiErrorResponse'
           example:
             success: false
-            message: Categoría no encontrada.
+            message: Recurso no encontrado.
+
+    Unauthorized:
+      description: No autenticado — token ausente, inválido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            success: false
+            message: Token no válido o expirado.
+
+    Forbidden:
+      description: Sin permisos para esta acción (rol insuficiente)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            success: false
+            message: No tienes permisos para realizar esta acción.
 
     ValidationError:
       description: Error de validación
@@ -1278,6 +1606,39 @@ components:
             type: array
             items:
               type: string
+
+    # ── Auth ──────────────────────────────────────────────────
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: carlos@licoreria.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: vendedor123
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT Bearer token — válido 60 minutos
+          example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+        token_type:
+          type: string
+          example: bearer
+        expires_in:
+          type: integer
+          description: Segundos hasta que el access token expire
+          example: 3600
+        usuario:
+          $ref: '#/components/schemas/Usuario'
 
     # ── Categoría ─────────────────────────────────────────────
 
@@ -2026,3 +2387,57 @@ components:
           nullable: true
           maxLength: 500
           example: Reposición de stock mensual
+
+    # ── Detalle Venta ──────────────────────────────────────────────
+
+    DetalleVenta:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        venta_id:
+          type: integer
+          example: 1
+        cantidad:
+          type: number
+          format: float
+          example: 3.00
+        precio_unitario:
+          type: number
+          format: float
+          example: 25.00
+        sub_total:
+          type: number
+          format: float
+          description: Calculado automáticamente (cantidad × precio_unitario)
+          example: 75.00
+        producto:
+          $ref: '#/components/schemas/Producto'
+        almacen:
+          $ref: '#/components/schemas/Almacen'
+        movimiento:
+          $ref: '#/components/schemas/Movimiento'
+        creado_en:
+          type: string
+          format: date-time
+          example: '2026-03-08 10:00:00'
+
+    StoreDetalleVentaRequest:
+      type: object
+      required: [producto_id, cantidad, precio_unitario]
+      properties:
+        producto_id:
+          type: integer
+          description: Producto a vender (debe tener stock en el almacén de la venta)
+          example: 1
+        cantidad:
+          type: number
+          format: float
+          minimum: 0.01
+          example: 3.00
+        precio_unitario:
+          type: number
+          format: float
+          minimum: 0.01
+          example: 25.00
