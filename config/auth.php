@@ -37,8 +37,13 @@ return [
 
     'guards' => [
         'web' => [
-            'driver' => 'session',
+            'driver'   => 'session',
             'provider' => 'users',
+        ],
+        // Guard JWT para la API — usa el modelo Usuario
+        'api' => [
+            'driver'   => 'jwt',
+            'provider' => 'usuarios',
         ],
     ],
 
@@ -62,7 +67,12 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model'  => env('AUTH_MODEL', App\Models\Usuario::class),
+        ],
+        // Provider para el guard api
+        'usuarios' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\Usuario::class,
         ],
 
         // 'users' => [

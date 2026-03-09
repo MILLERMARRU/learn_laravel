@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\AlmacenRepository;
+use App\Repositories\DetalleVentaRepository;
 use App\Repositories\MovimientoRepository;
 use App\Repositories\CategoriaRepository;
 use App\Repositories\InventarioRepository;
@@ -11,6 +12,7 @@ use App\Repositories\RolRepository;
 use App\Repositories\UsuarioRepository;
 use App\Repositories\VentaRepository;
 use App\Repositories\Contracts\AlmacenRepositoryInterface;
+use App\Repositories\Contracts\DetalleVentaRepositoryInterface;
 use App\Repositories\Contracts\MovimientoRepositoryInterface;
 use App\Repositories\Contracts\CategoriaRepositoryInterface;
 use App\Repositories\Contracts\InventarioRepositoryInterface;
@@ -19,6 +21,8 @@ use App\Repositories\Contracts\RolRepositoryInterface;
 use App\Repositories\Contracts\UsuarioRepositoryInterface;
 use App\Repositories\Contracts\VentaRepositoryInterface;
 use App\Services\AlmacenService;
+use App\Services\AuthService;
+use App\Services\DetalleVentaService;
 use App\Services\MovimientoService;
 use App\Services\CategoriaService;
 use App\Services\InventarioService;
@@ -27,6 +31,8 @@ use App\Services\RolService;
 use App\Services\UsuarioService;
 use App\Services\VentaService;
 use App\Services\Contracts\AlmacenServiceInterface;
+use App\Services\Contracts\AuthServiceInterface;
+use App\Services\Contracts\DetalleVentaServiceInterface;
 use App\Services\Contracts\MovimientoServiceInterface;
 use App\Services\Contracts\CategoriaServiceInterface;
 use App\Services\Contracts\InventarioServiceInterface;
@@ -123,6 +129,21 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             MovimientoServiceInterface::class,
             MovimientoService::class,
+        );
+
+        $this->app->bind(
+            DetalleVentaRepositoryInterface::class,
+            DetalleVentaRepository::class,
+        );
+
+        $this->app->bind(
+            DetalleVentaServiceInterface::class,
+            DetalleVentaService::class,
+        );
+
+        $this->app->bind(
+            AuthServiceInterface::class,
+            AuthService::class,
         );
     }
 }

@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Usuario extends Model
+class Usuario extends Model implements Authenticatable, JWTSubject
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, AuthenticatableTrait;
 
     protected $fillable = [
         'rol_id',
@@ -25,6 +28,11 @@ class Usuario extends Model
         'password_hash',
     ];
 
+    protected $attributes = [
+        'activo'               => true,
+        'must_change_password' => false,
+    ];
+
     protected $casts = [
         'must_change_password' => 'boolean',
         'activo'               => 'boolean',
@@ -34,5 +42,26 @@ class Usuario extends Model
     public function rol(): BelongsTo
     {
         return $this->belongsTo(Rol::class);
+    }
+
+    // ── JWTSubject ───────────────────────────────────────────────
+
+    public function getJWTIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims(): array
+    {
+        return [
+            'rol' => $this->rol?->nombre,
+        ];
+    }
+
+    // ── Authenticatable — campo de contraseña ────────────────────
+
+    public function getAuthPassword(): string
+    {
+        return $this->password_hash;
     }
 }

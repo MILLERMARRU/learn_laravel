@@ -21,6 +21,10 @@ class Almacen extends Model
         'activo',
     ];
 
+    protected $attributes = [
+        'activo' => true,
+    ];
+
     protected $casts = [
         'activo' => 'boolean',
     ];
