@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('refresh_tokens', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('usuario_id')
+                ->constrained('usuarios')
+                ->cascadeOnDelete();
+
+            // Guardado como SHA-256 hash — nunca el token en crudo
+            $table->string('token', 64)->unique();
+
+            $table->timestamp('expires_at');
+            $table->timestamp('created_at')->useCurrent();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('refresh_tokens');
+    }
+};
