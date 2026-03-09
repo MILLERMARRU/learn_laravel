@@ -30,6 +30,23 @@ class VentaService implements VentaServiceInterface
 
     public function actualizar(Venta $venta, array $data): Venta
     {
+        $usuario = auth('api')->user();
+
+        // Vendedor solo puede cambiar el estado a 'completada' — nada más
+        if ($usuario?->rol?->nombre === 'Vendedor') {
+            if (count($data) !== 1 || ! isset($data['estado'])) {
+                throw new \RuntimeException(
+                    'Como vendedor solo puedes actualizar el estado de la venta.'
+                );
+            }
+
+            if ($data['estado'] !== 'completada') {
+                throw new \RuntimeException(
+                    "Como vendedor solo puedes cambiar el estado a 'completada'."
+                );
+            }
+        }
+
         return $this->ventaRepository->update($venta, $data);
     }
 
