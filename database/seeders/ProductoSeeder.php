@@ -14,6 +14,7 @@ class ProductoSeeder extends Seeder
             // ── Licores (categoria_id = 1) ───────────────────
             [
                 'cod_producto'     => 'LIC-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Ron Cartavio Blanco',
                 'categoria_id'     => 1,
                 'marca'            => 'Cartavio',
@@ -27,6 +28,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'LIC-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Whisky Johnnie Walker Red',
                 'categoria_id'     => 1,
                 'marca'            => 'Johnnie Walker',
@@ -40,6 +42,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'LIC-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Vodka Absolut Original',
                 'categoria_id'     => 1,
                 'marca'            => 'Absolut',
@@ -53,6 +56,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'LIC-004',
+                'codigo_barras'    => null,
                 'nombre'           => 'Ron Bacardí Blanco',
                 'categoria_id'     => 1,
                 'marca'            => 'Bacardí',
@@ -66,6 +70,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'LIC-005',
+                'codigo_barras'    => null,
                 'nombre'           => 'Pisco Queirolo',
                 'categoria_id'     => 1,
                 'marca'            => 'Queirolo',
@@ -81,6 +86,7 @@ class ProductoSeeder extends Seeder
             // ── Gaseosas (categoria_id = 2) ──────────────────
             [
                 'cod_producto'     => 'GAS-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Inca Kola',
                 'categoria_id'     => 2,
                 'marca'            => 'Inca Kola',
@@ -94,6 +100,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAS-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Coca Cola',
                 'categoria_id'     => 2,
                 'marca'            => 'Coca Cola',
@@ -107,6 +114,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAS-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Sprite',
                 'categoria_id'     => 2,
                 'marca'            => 'Sprite',
@@ -120,6 +128,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAS-004',
+                'codigo_barras'    => null,
                 'nombre'           => 'Fanta Naranja',
                 'categoria_id'     => 2,
                 'marca'            => 'Fanta',
@@ -133,6 +142,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAS-005',
+                'codigo_barras'    => null,
                 'nombre'           => 'Pepsi',
                 'categoria_id'     => 2,
                 'marca'            => 'Pepsi',
@@ -148,6 +158,7 @@ class ProductoSeeder extends Seeder
             // ── Snacks (categoria_id = 3) ─────────────────────
             [
                 'cod_producto'     => 'SNA-001',
+                'codigo_barras'    => null,
                 'nombre'           => "Papas Lay's Original",
                 'categoria_id'     => 3,
                 'marca'            => "Lay's",
@@ -161,6 +172,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'SNA-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Doritos Nacho Cheese',
                 'categoria_id'     => 3,
                 'marca'            => 'Doritos',
@@ -174,6 +186,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'SNA-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Chizitos',
                 'categoria_id'     => 3,
                 'marca'            => 'Evercrisp',
@@ -187,6 +200,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'SNA-004',
+                'codigo_barras'    => null,
                 'nombre'           => 'Cuates',
                 'categoria_id'     => 3,
                 'marca'            => 'Frito-Lay',
@@ -202,6 +216,7 @@ class ProductoSeeder extends Seeder
             // ── Galletas (categoria_id = 4) ───────────────────
             [
                 'cod_producto'     => 'GAL-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Oreo',
                 'categoria_id'     => 4,
                 'marca'            => 'Oreo',
@@ -215,6 +230,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAL-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Galleta Vainilla',
                 'categoria_id'     => 4,
                 'marca'            => 'Casino',
@@ -228,6 +244,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'GAL-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Soda Victoria',
                 'categoria_id'     => 4,
                 'marca'            => 'Victoria',
@@ -239,10 +256,25 @@ class ProductoSeeder extends Seeder
                 'stock_minimo'     => 10,
                 'activo'           => true,
             ],
+            [
+                'cod_producto'     => 'GAL-004',
+                'codigo_barras'    => '7750106002608',
+                'nombre'           => 'Rellenita',
+                'categoria_id'     => 4,
+                'marca'            => 'Nabisco',
+                'unidad_medida'    => 'und',
+                'contenido'        => '43g',
+                'precio_compra'    => 0.50,
+                'precio_minorista' => 1.00,
+                'precio_mayorista' => 0.80,
+                'stock_minimo'     => 20,
+                'activo'           => true,
+            ],
 
             // ── Hielo (categoria_id = 5) ──────────────────────
             [
                 'cod_producto'     => 'HIE-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Hielo en bolsa 3kg',
                 'categoria_id'     => 5,
                 'marca'            => null,
@@ -256,6 +288,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'HIE-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Hielo en bolsa 5kg',
                 'categoria_id'     => 5,
                 'marca'            => null,
@@ -271,6 +304,7 @@ class ProductoSeeder extends Seeder
             // ── Cigarrillos (categoria_id = 6) ────────────────
             [
                 'cod_producto'     => 'CIG-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Marlboro Red',
                 'categoria_id'     => 6,
                 'marca'            => 'Marlboro',
@@ -284,6 +318,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'CIG-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Lucky Strike Azul',
                 'categoria_id'     => 6,
                 'marca'            => 'Lucky Strike',
@@ -297,6 +332,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'CIG-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Hamilton Azul',
                 'categoria_id'     => 6,
                 'marca'            => 'Hamilton',
@@ -312,6 +348,7 @@ class ProductoSeeder extends Seeder
             // ── Otros (categoria_id = 7) ──────────────────────
             [
                 'cod_producto'     => 'OTR-001',
+                'codigo_barras'    => null,
                 'nombre'           => 'Agua San Luis',
                 'categoria_id'     => 7,
                 'marca'            => 'San Luis',
@@ -325,6 +362,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'OTR-002',
+                'codigo_barras'    => null,
                 'nombre'           => 'Red Bull',
                 'categoria_id'     => 7,
                 'marca'            => 'Red Bull',
@@ -338,6 +376,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'cod_producto'     => 'OTR-003',
+                'codigo_barras'    => null,
                 'nombre'           => 'Jugo Frugos Durazno',
                 'categoria_id'     => 7,
                 'marca'            => 'Frugos',

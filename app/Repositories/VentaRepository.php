@@ -50,7 +50,9 @@ class VentaRepository implements VentaRepositoryInterface
             $query->withTrashed();
         }
 
-        return $query->orderBy('id', 'asc')->paginate(15);
+        $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 50;
+
+        return $query->orderBy('id', 'desc')->paginate($perPage);
     }
 
     public function find(int $id): ?Venta

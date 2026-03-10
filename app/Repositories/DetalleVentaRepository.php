@@ -30,4 +30,9 @@ class DetalleVentaRepository implements DetalleVentaRepositoryInterface
     {
         return (float) DetalleVenta::where('venta_id', $ventaId)->sum('sub_total');
     }
+
+    public function delete(DetalleVenta $detalle): bool
+    {
+        return $detalle->forceDelete();
+    }
 }

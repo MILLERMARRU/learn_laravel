@@ -13,4 +13,6 @@ interface DetalleVentaServiceInterface
     public function obtener(int $id): ?DetalleVenta;
 
     public function registrar(Venta $venta, array $data): DetalleVenta;
+
+    public function eliminar(Venta $venta, DetalleVenta $detalle): void;
 }

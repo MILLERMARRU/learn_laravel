@@ -12,10 +12,14 @@ class ProductoRepository implements ProductoRepositoryInterface
     {
         $query = Producto::with('categoria');
 
-        if (! empty($filters['search'])) {
+        // Búsqueda exacta por código de barras (tiene prioridad sobre search)
+        if (! empty($filters['codigo_barras'])) {
+            $query->where('codigo_barras', $filters['codigo_barras']);
+        } elseif (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('nombre', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('cod_producto', 'like', '%' . $filters['search'] . '%');
+                  ->orWhere('cod_producto', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('codigo_barras', 'like', '%' . $filters['search'] . '%');
             });
         }
 
