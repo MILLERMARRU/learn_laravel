@@ -20,7 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     // ✅ Origen exacto del frontend — NO usar '*' cuando supports_credentials=true
-    'allowed_origins' => ['http://localhost:3000'],
+    // http://localhost:8000 / http://127.0.0.1:8000 → Swagger UI (mismo servidor Laravel)
+    'allowed_origins' => ['http://localhost:3000', 'http://localhost:8000', 'http://127.0.0.1:8000'],
 
     'allowed_origins_patterns' => [],
 
