@@ -74,7 +74,7 @@ Route::prefix('v1')->group(function () {
             ->only(['index', 'store', 'show', 'update']);
 
         Route::apiResource('ventas.detalles', DetalleVentaController::class)
-            ->only(['index', 'store', 'show']);
+            ->only(['index', 'store', 'show', 'destroy']);
 
         // ══ 5. SOLO ADMINISTRADOR ════════════════════════════════
 
