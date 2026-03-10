@@ -25,6 +25,7 @@ class ProductoController extends Controller
     {
         $filters = $request->only([
             'search',
+            'codigo_barras',
             'per_page',
             'categoria_id',
             'activo',
