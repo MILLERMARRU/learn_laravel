@@ -33,6 +33,7 @@ class VentaController extends Controller
             'fecha_desde',
             'fecha_hasta',
             'con_eliminados',
+            'per_page',
         ]);
 
         $paginado = $this->ventaService->listar($filters);
@@ -49,7 +50,13 @@ class VentaController extends Controller
      */
     public function store(StoreVentaRequest $request): JsonResponse
     {
-        $venta = $this->ventaService->crear($request->validated());
+        $data = array_merge($request->validated(), [
+            'usuario_id' => auth('api')->id(),
+            'estado'     => 'pendiente',
+            'total'      => 0,
+        ]);
+
+        $venta = $this->ventaService->crear($data);
 
         return $this->apiResponse(
             success: true,
@@ -64,6 +71,8 @@ class VentaController extends Controller
      */
     public function show(Venta $venta): JsonResponse
     {
+        $venta->load(['usuario', 'almacen']);
+
         return $this->apiResponse(
             success: true,
             message: 'Venta obtenida correctamente.',
