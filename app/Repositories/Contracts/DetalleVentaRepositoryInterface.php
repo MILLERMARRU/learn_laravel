@@ -14,4 +14,6 @@ interface DetalleVentaRepositoryInterface
     public function create(array $data): DetalleVenta;
 
     public function sumarTotalVenta(int $ventaId): float;
+
+    public function delete(DetalleVenta $detalle): bool;
 }
