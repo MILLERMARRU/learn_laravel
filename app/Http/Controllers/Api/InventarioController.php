@@ -23,7 +23,7 @@ class InventarioController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['producto_id', 'almacen_id', 'bajo_minimo']);
+        $filters = $request->only(['producto_id', 'almacen_id', 'bajo_minimo', 'per_page']);
 
         $paginado = $this->inventarioService->listar($filters);
 
