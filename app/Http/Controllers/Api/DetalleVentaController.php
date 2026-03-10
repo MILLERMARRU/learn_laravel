@@ -56,6 +56,33 @@ class DetalleVentaController extends Controller
     }
 
     /**
+     * DELETE /api/v1/ventas/{venta}/detalles/{detalle}
+     * Elimina un detalle, restaura el stock y recalcula el total.
+     */
+    public function destroy(Venta $venta, DetalleVenta $detalle): JsonResponse
+    {
+        if ($detalle->venta_id !== $venta->id) {
+            return $this->apiResponse(
+                success: false,
+                message: 'El detalle no pertenece a la venta indicada.',
+                status: 404,
+            );
+        }
+
+        try {
+            $this->detalleVentaService->eliminar($venta, $detalle);
+        } catch (\RuntimeException $e) {
+            return $this->apiResponse(
+                success: false,
+                message: $e->getMessage(),
+                status: 422,
+            );
+        }
+
+        return response()->json(null, 204);
+    }
+
+    /**
      * GET /api/v1/ventas/{venta}/detalles/{detalle}
      * Muestra un detalle específico de la venta.
      */
