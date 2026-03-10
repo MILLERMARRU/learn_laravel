@@ -25,7 +25,9 @@ class InventarioRepository implements InventarioRepositoryInterface
             $query->whereColumn('cantidad', '<', 'cantidad_minima');
         }
 
-        return $query->orderBy('id', 'asc')->paginate(15);
+        $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 500;
+
+        return $query->orderBy('id', 'asc')->paginate($perPage);
     }
 
     public function find(int $id): ?Inventario
