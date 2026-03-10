@@ -41,6 +41,7 @@ class InventarioSeeder extends Seeder
             23 => [150, 80, 300], // Agua San Luis
             24 => [80, 50, 150],  // Red Bull
             25 => [100, 60, 200], // Jugo Frugos
+            26 => [100, 60, 200], // Rellenita
         ];
 
         foreach ($stocks as $productoId => [$cant1, $cant2, $cant3]) {
