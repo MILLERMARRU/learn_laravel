@@ -103,4 +103,50 @@ class DetalleVentaService implements DetalleVentaServiceInterface
             return $detalle->load(['producto', 'almacen', 'movimiento']);
         });
     }
+
+    /**
+     * Elimina un detalle de venta (solo si la venta está pendiente):
+     * 1. Verifica que la venta esté pendiente
+     * 2. Restaura el stock en inventario
+     * 3. Elimina el movimiento de salida
+     * 4. Elimina el detalle
+     * 5. Recalcula el total de la venta
+     */
+    public function eliminar(Venta $venta, DetalleVenta $detalle): void
+    {
+        DB::transaction(function () use ($venta, $detalle) {
+            if ($venta->estado !== 'pendiente') {
+                throw new \RuntimeException(
+                    "No se pueden eliminar detalles de una venta con estado '{$venta->estado}'."
+                );
+            }
+
+            // Restaurar stock
+            $inventario = $this->inventarioRepository->findByProductoAlmacen(
+                $detalle->producto_id,
+                $detalle->almacen_id
+            );
+
+            if ($inventario) {
+                $inventario->cantidad += $detalle->cantidad;
+                $inventario->ultima_actualizacion = now();
+                $inventario->save();
+            }
+
+            // Guardar movimiento_id antes de borrar el detalle
+            $movimientoId = $detalle->movimiento_id;
+
+            // Eliminar detalle primero (libera la FK a movimientos)
+            $this->detalleVentaRepository->delete($detalle);
+
+            // Ahora sí se puede eliminar el movimiento
+            if ($movimientoId) {
+                $this->movimientoRepository->find($movimientoId)?->forceDelete();
+            }
+
+            // Recalcular total
+            $venta->total = $this->detalleVentaRepository->sumarTotalVenta($venta->id);
+            $venta->save();
+        });
+    }
 }
