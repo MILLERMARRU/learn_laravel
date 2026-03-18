@@ -30,6 +30,16 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
+        // ── DEBUG TEMPORAL: captura cualquier excepción como JSON ──
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            return response()->json([
+                'debug_error' => get_class($e),
+                'message'     => $e->getMessage(),
+                'file'        => $e->getFile() . ':' . $e->getLine(),
+                'trace'       => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+            ], 500);
+        });
+
         // ── Errores de validación → formato apiResponse estándar ──
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson()) {
