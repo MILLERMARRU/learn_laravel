@@ -12,8 +12,6 @@ class SwaggerController extends Controller
      */
     public function ui(): Response
     {
-        $specUrl = url('/docs/spec');
-
         $html = <<<HTML
         <!DOCTYPE html>
         <html lang="es">
@@ -33,7 +31,7 @@ class SwaggerController extends Controller
             <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
             <script>
                 SwaggerUIBundle({
-                    url: '{$specUrl}',
+                    url: '/docs/spec',
                     dom_id: '#swagger-ui',
                     presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
                     layout: 'BaseLayout',
