@@ -1,15 +1,21 @@
 <?php
 
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
-
 try {
-    $storagePath = '/tmp/laravel-storage';
-    @mkdir($storagePath . '/framework/cache/data', 0777, true);
-    @mkdir($storagePath . '/framework/sessions', 0777, true);
-    @mkdir($storagePath . '/framework/views', 0777, true);
-    @mkdir($storagePath . '/logs', 0777, true);
-    putenv('VIEW_COMPILED_PATH=' . $storagePath . '/framework/views');
+    // ── Directorios en /tmp para entorno serverless (Vercel filesystem read-only) ──
+    $storageBase = '/tmp/laravel-storage';
+    @mkdir($storageBase . '/framework/cache/data', 0777, true);
+    @mkdir($storageBase . '/framework/sessions', 0777, true);
+    @mkdir($storageBase . '/framework/views', 0777, true);
+    @mkdir($storageBase . '/logs', 0777, true);
+
+    // Laravel lee estas vars de entorno para los archivos de caché de bootstrap
+    $cacheBase = '/tmp/laravel-cache';
+    @mkdir($cacheBase, 0777, true);
+    $_ENV['APP_PACKAGES_CACHE'] = $cacheBase . '/packages.php';
+    $_ENV['APP_SERVICES_CACHE'] = $cacheBase . '/services.php';
+    $_ENV['APP_CONFIG_CACHE']   = $cacheBase . '/config.php';
+    $_ENV['APP_ROUTES_CACHE']   = $cacheBase . '/routes-v7.php';
+    $_ENV['APP_EVENTS_CACHE']   = $cacheBase . '/events.php';
 
     define('LARAVEL_START', microtime(true));
 
@@ -21,7 +27,7 @@ try {
 
     /** @var \Illuminate\Foundation\Application $app */
     $app = require_once __DIR__ . '/../bootstrap/app.php';
-    $app->useStoragePath($storagePath);
+    $app->useStoragePath($storageBase);
     $app->handleRequest(\Illuminate\Http\Request::capture());
 
 } catch (\Throwable $e) {
