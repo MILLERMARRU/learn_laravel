@@ -1,7 +1,5 @@
 <?php
 
-echo "PHP OK - step 1\n";
-
 $storagePath = '/tmp/laravel-storage';
 @mkdir($storagePath . '/framework/cache/data', 0777, true);
 @mkdir($storagePath . '/framework/sessions', 0777, true);
@@ -9,12 +7,13 @@ $storagePath = '/tmp/laravel-storage';
 @mkdir($storagePath . '/logs', 0777, true);
 putenv('VERCEL_STORAGE_PATH=' . $storagePath);
 
-echo "PHP OK - step 2 (storage dirs created)\n";
-
-if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    die("FATAL: vendor/autoload.php not found\n");
+try {
+    require __DIR__ . '/../public/index.php';
+} catch (\Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: text/plain');
+    echo "=== LARAVEL ERROR ===\n";
+    echo $e->getMessage() . "\n\n";
+    echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n\n";
+    echo $e->getTraceAsString();
 }
-
-echo "PHP OK - step 3 (vendor found)\n";
-
-require __DIR__ . '/../public/index.php';
