@@ -9,7 +9,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         App\Providers\RepositoryServiceProvider::class,
     ])
@@ -72,3 +72,10 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
     })->create();
+
+// Redirigir storage a /tmp en entornos serverless (Vercel)
+if ($serverlessStorage = getenv('VERCEL_STORAGE_PATH')) {
+    $app->useStoragePath($serverlessStorage);
+}
+
+return $app;
