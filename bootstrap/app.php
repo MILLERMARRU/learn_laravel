@@ -9,7 +9,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
-$app = Application::configure(basePath: dirname(__DIR__))
+return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         App\Providers\RepositoryServiceProvider::class,
     ])
@@ -72,16 +72,3 @@ $app = Application::configure(basePath: dirname(__DIR__))
         });
 
     })->create();
-
-// Redirigir storage a /tmp si el directorio original no tiene permisos de escritura (Vercel serverless)
-$defaultStorage = dirname(__DIR__) . '/storage';
-if (!is_writable($defaultStorage)) {
-    $serverlessStorage = '/tmp/laravel-storage';
-    @mkdir($serverlessStorage . '/framework/cache/data', 0777, true);
-    @mkdir($serverlessStorage . '/framework/sessions', 0777, true);
-    @mkdir($serverlessStorage . '/framework/views', 0777, true);
-    @mkdir($serverlessStorage . '/logs', 0777, true);
-    $app->useStoragePath($serverlessStorage);
-}
-
-return $app;
