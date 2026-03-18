@@ -30,13 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        // ── DEBUG TEMPORAL: captura cualquier excepción como JSON ──
+        // ── DEBUG TEMPORAL: captura cualquier excepción sin usar el container ──
         $exceptions->render(function (\Throwable $e, Request $request) {
-            return response()->json([
+            return new \Symfony\Component\HttpFoundation\JsonResponse([
                 'debug_error' => get_class($e),
                 'message'     => $e->getMessage(),
                 'file'        => $e->getFile() . ':' . $e->getLine(),
-                'trace'       => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+                'trace'       => array_slice(explode("\n", $e->getTraceAsString()), 0, 8),
             ], 500);
         });
 
