@@ -9,6 +9,7 @@ try {
     @mkdir($storagePath . '/framework/sessions', 0777, true);
     @mkdir($storagePath . '/framework/views', 0777, true);
     @mkdir($storagePath . '/logs', 0777, true);
+    putenv('VIEW_COMPILED_PATH=' . $storagePath . '/framework/views');
 
     define('LARAVEL_START', microtime(true));
 
