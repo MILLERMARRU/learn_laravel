@@ -73,8 +73,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
     })->create();
 
-// Redirigir storage a /tmp en entornos serverless (Vercel)
-if ($serverlessStorage = getenv('VERCEL_STORAGE_PATH')) {
+// Redirigir storage a /tmp si el directorio original no tiene permisos de escritura (Vercel serverless)
+$defaultStorage = dirname(__DIR__) . '/storage';
+if (!is_writable($defaultStorage)) {
+    $serverlessStorage = '/tmp/laravel-storage';
+    @mkdir($serverlessStorage . '/framework/cache/data', 0777, true);
+    @mkdir($serverlessStorage . '/framework/sessions', 0777, true);
+    @mkdir($serverlessStorage . '/framework/views', 0777, true);
+    @mkdir($serverlessStorage . '/logs', 0777, true);
     $app->useStoragePath($serverlessStorage);
 }
 
