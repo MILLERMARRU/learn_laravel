@@ -24,6 +24,4 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Documentación interna y guías de Claude — no se suben al repositorio
-/docs/*.md
 CLAUDE.md

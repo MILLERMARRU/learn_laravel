@@ -28,6 +28,8 @@ info:
   version: 1.0.0
 
 servers:
+  - url: https://learn-laravel-nine.vercel.app/api/v1
+    description: Producción (Vercel)
   - url: http://localhost:8000/api/v1
     description: Desarrollo local
 
