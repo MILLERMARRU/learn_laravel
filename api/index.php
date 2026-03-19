@@ -16,6 +16,13 @@ $_ENV['APP_CONFIG_CACHE']   = $cacheBase . '/config.php';
 $_ENV['APP_ROUTES_CACHE']   = $cacheBase . '/routes-v7.php';
 $_ENV['APP_EVENTS_CACHE']   = $cacheBase . '/events.php';
 
+// ── Vercel strips /api prefix when routing to api/index.php ─────────────────
+// /api/v1/foo arrives as /v1/foo — restore it so Laravel finds the api routes.
+// Only applies to versioned API paths, web routes (/docs, /) stay untouched.
+if (isset($_SERVER['REQUEST_URI']) && str_starts_with(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/v1')) {
+    $_SERVER['REQUEST_URI'] = '/api' . $_SERVER['REQUEST_URI'];
+}
+
 define('LARAVEL_START', microtime(true));
 
 if (file_exists($maintenance = __DIR__ . '/../storage/framework/maintenance.php')) {
